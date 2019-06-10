@@ -27,8 +27,8 @@ http://localhost:5000/
 
 ### Screenshot
 
-![Alt text](screenshot/1.png)
-![Alt text](screenshot/2.png)
+![Alt text](screenshots/1.png)
+![Alt text](screenshots/2.png)
 
 ### License
 
