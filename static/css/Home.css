@@ -1,0 +1,123 @@
+.jumbotron {
+  margin-bottom: 4em;
+}
+.person-wrapper {
+  margin-bottom: 2em;
+}
+
+.profile-pic {
+  width: 50%;
+}
+
+.btn-primary {
+  background-image: none;
+  border: none;
+  border-radius: 0;
+  background-color: #2892D7;
+}
+
+h3 {
+  margin-bottom: 1em;
+}
+
+
+/* CreateContact */
+.buttons button {
+  	
+  display: block;	
+}
+
+.close-create-contact {
+  display: block;
+  width: 60px;
+  height: 60px;
+  /*background-image: url('./icons/arrow-back.svg');*/
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 30px;
+  font-size: 0;
+}
+
+.create-contact-form {
+  padding: 40px 0px 0px 0px;
+  max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+}
+
+.create-contact-details {
+  /*margin-left: 20px;*/
+}
+
+.create-contact-avatar-input {
+  min-width: 60px;
+  height: 60px;
+  background-color: white;
+  /*background-image: url('./icons/person.svg');*/
+  background-size: 32px 32px;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 50%;
+}
+
+.create-contact-details input {
+  width: 100%;
+  padding: 5px 10px;
+  margin-bottom: 10px;
+  font-size: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #ccc;
+  outline: 0;
+}
+
+
+.create-contact-details button {
+  margin-top: 20px;
+  background: #ccc;
+  padding: 10px;
+  text-transform: uppercase;
+  font-size: inherit;
+  border: none;
+  outline: 0;
+}
+
+
+
+
+
+
+
+/********** Personalized STYLES from MATERIALIZE ***********/
+
+.card-dashboard .card-content {
+
+  padding: 12px
+}
+
+.card-dashboard .card-title {
+  text-align: center;
+}
+
+
+.input__weight{
+  height: 1.5rem !important;
+}
+
+.tabs__projections .tab a {
+  color: #26a69a;
+}
+
+.tabs__projections .tab a:focus, .tabs .tab a:focus.active {
+  background-color: rgba(41,182,246,.2)
+;
+}
+
+.tabs__projections .tab a:hover, .tabs .tab a.active {
+  background-color: transparent;
+  color: #29b6f6;
+}
+
+.tabs__projections .indicator {
+  background-color: #29b6f6;
+}

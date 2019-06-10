@@ -1,0 +1,6 @@
+static/node_modules
+static/dist
+static/package-lock.json
+static/yarn.lock
+static/yarn-error.lock
+server/server_.py
