@@ -44,15 +44,15 @@ for param_tensor in model.state_dict():
 #     print(var_name, "\t", optimizer.state_dict()[var_name])
 
 
-torch.save(model.state_dict(), "./TheModelClass_state_dict.pt")
+# torch.save(model.state_dict(), "./TheModelClass_state_dict.pt")
 
 
-model2 = TheModelClass()
-model2.load_state_dict(torch.load("./TheModelClass_state_dict.pt"))
-model2.eval()
+# model2 = TheModelClass()
+# model2.load_state_dict(torch.load("./TheModelClass_state_dict.pt"))
+# model2.eval()
 
 
-# Print model's state_dict
-print("Model's state_dict:")
-for param_tensor in model2.state_dict():
-    print(param_tensor, "\t", model2.state_dict()[param_tensor].size())
+# # Print model's state_dict
+# print("Model's state_dict:")
+# for param_tensor in model2.state_dict():
+#     print(param_tensor, "\t", model2.state_dict()[param_tensor].size())

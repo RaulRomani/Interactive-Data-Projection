@@ -1,6 +1,6 @@
-import  { Component }  from 'react'
+import React from "react";
 
-export default class CustomNavbar extends Component {
+export default class CustomNavbar extends React.Component {
 
   constructor(props) {
     super(props);

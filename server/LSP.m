@@ -94,7 +94,7 @@ end
 
 
 
-sc = sort(control_points(:,3)' +1,'ascend')
+sc = sort(control_points(:,3)' +1,'ascend');
 # sc = sort(randsample(n,nc),'ascend');
 
 d = D(sc,sc); #sampling of control points

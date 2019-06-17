@@ -1,10 +1,10 @@
 import random
-from flask import Flask, render_template,  request, jsonify
+from flask import Flask, render_template,  request, jsonify, g
 import simplejson as json
 import pandas as pd
 from lamp import Lamp
 from util import fitLamp
-from util import getMetricsForAllProjections
+from util import getMetricsForAllProjections, getMetrics
 import numpy as np
 from sklearn.manifold import MDS
 import matplotlib.pyplot as plt
@@ -20,6 +20,10 @@ from deep_projection.model import DREstimator, myMSELoss
 import sys
 import os
 
+from sklearn import preprocessing
+min_max_scaler = preprocessing.MinMaxScaler()
+
+global_var = "hello"
 try:
     # Python 2
     xrange
@@ -31,7 +35,9 @@ app = Flask(__name__, static_folder='../static/dist', template_folder='../static
 
 @app.route('/')
 def index():
-	return render_template('index.html')
+  g.user = "WTF"
+  global_var = "WTF"
+  return render_template('index.html')
 
 @app.route('/controlPoints', methods=['post']) # take note of this decorator syntax, it's a common pattern
 def getControlPoints():
@@ -62,6 +68,12 @@ def getControlPoints():
   f = force.Force(X[ctp_ids], [])
   f.project()
   ctp_samples = f.get_projection()
+
+  ##### projecting control points with UMAP #####
+  # import umap
+  # ctp_samples = umap.UMAP().fit_transform(X[ctp_ids])
+
+  # ctp_samples = min_max_scaler.fit_transform(ctp_samples) # min_max
 
   # including ids of control points as the last column of the projected control points
   proj_ctp = np.hstack((ctp_samples, ctp_ids.reshape(sample_size, 1)))
@@ -101,7 +113,7 @@ def projectUsingEnsemble():
 
   # cp_x           = np.array(data['controlPoints']['x']).reshape( (-1,1) )
   # cp_y           = np.array(data['controlPoints']['y']).reshape( (-1,1) )
-  # # cp_labels      = np.array(data['controlPoints']['labels']).reshape( (-1,1) )
+  # # cp_labels    = np.array(data['controlPoints']['labels']).reshape( (-1,1) )
   # control_points = np.hstack((cp_x, cp_y))
 
   # methods = {'LAMP':True}
@@ -112,7 +124,43 @@ def projectUsingEnsemble():
   # projection_json = { 'x': projection[:,0].tolist(), 'y': projection[:,1].tolist(), 'labels': labels.reshape(-1).tolist() }
 
   return json.dumps(data) 
+
+@app.route('/changeWeightsEnsemble', methods=['post']) # take note of this decorator syntax, it's a common pattern
+def changeWeightsEnsemble():
+  values = json.loads(request.data.decode('utf-8'))
+  print(values)
+
+  dataset_name = values['datasetName']
+  labels       = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '_labels.csv', header=None).values.reshape((-1))
+  X            = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '_prep_encoding2.csv', header=None).values
+
+  # values['LAMP_weight']
+
+  ensemble = np.zeros( (X.shape[0], 2) )
+
+  if float(values['LAMP_weight']) != 0.0:
+    x_projected = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '_projected_LAMP.csv', header=None).values
+    ensemble += x_projected * float(values['LAMP_weight'])
+  if float(values['LSP_weight']) != 0.0:
+    x_projected = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '_projected_LSP.csv', header=None).values
+    ensemble += x_projected * float(values['LSP_weight'])
+  if float(values['PLMP_weight']) != 0.0:
+    x_projected = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '_projected_PLMP.csv', header=None).values
+    ensemble += x_projected * float(values['PLMP_weight'])
+
+
+  data = {}
+  data['Ensemble'] = { 'x': ensemble[:,0].tolist(), 'y': ensemble[:,1].tolist(), 'labels': labels.reshape(-1).tolist() }
+
+  # TODO: 8 should not be hardcoded
+  data['Ensemble_metrics'] = getMetrics(X, ensemble, labels, 8)
+
+  return json.dumps(data) 
+
+
     
+
+
 def projectEnsemble(form_values, X, labels, control_points, dataset_name ):
   #Normalize weights
   weight1 = float(form_values['LAMP_weight'])/ (float(form_values['LAMP_weight']) + float(form_values['LSP_weight']) + float(form_values['PLMP_weight']))  
@@ -126,9 +174,16 @@ def projectEnsemble(form_values, X, labels, control_points, dataset_name ):
   projection_json = {}
   ensemble = np.zeros( (X.shape[0], 2) )
 
+
+  # X = min_max_scaler.fit_transform(X) # min_max
+
   if float(form_values['LAMP_weight']) != 0.0:
     lamp_proj   = Lamp(Xdata = X, control_points = control_points[:,:2], label=False)
     x_projected = lamp_proj.fit()
+    # x_projected = min_max_scaler.fit_transform(x_projected) # min_max
+    np.savetxt("../../datasets/" + dataset_name + '/'+ dataset_name + "_projected_LAMP.csv", x_projected, delimiter=",")
+
+
     projection_json['LAMP'] = { 'x': x_projected[:,0].tolist(), 'y': x_projected[:,1].tolist(), 'labels': labels.reshape(-1).tolist() }
     ensemble += x_projected*float(form_values['LAMP_weight'])
 
@@ -136,6 +191,9 @@ def projectEnsemble(form_values, X, labels, control_points, dataset_name ):
   if float(form_values['LSP_weight']) != 0.0:
     os.system("./runLSP.m " + dataset_name)
     x_projected = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '_projected_octave.csv', header=None).values
+    # x_projected = min_max_scaler.fit_transform(x_projected) # min_max
+    np.savetxt("../../datasets/" + dataset_name + '/'+ dataset_name + "_projected_LSP.csv", x_projected, delimiter=",")
+
     projection_json['LSP'] = { 'x': x_projected[:,0].tolist(), 'y': x_projected[:,1].tolist(), 'labels': labels.reshape(-1).tolist() }
     ensemble += x_projected*float(form_values['LSP_weight'])
 
@@ -144,14 +202,18 @@ def projectEnsemble(form_values, X, labels, control_points, dataset_name ):
     plmp = PLMP(X, labels.reshape(-1), control_points[:,2].reshape(-1).astype(int), control_points[:,:2])
     plmp.project()
     x_projected = plmp.get_projection()
+
+    # x_projected = min_max_scaler.fit_transform(x_projected) # min_max
+    np.savetxt("../../datasets/" + dataset_name + '/'+ dataset_name + "_projected_PLMP.csv", x_projected, delimiter=",")
+
     projection_json['PLMP'] = { 'x': x_projected[:,0].tolist(), 'y': x_projected[:,1].tolist(), 'labels': labels.reshape(-1).tolist() }
     ensemble += x_projected*float(form_values['PLMP_weight'])
 
   projection_json['Ensemble'] = { 'x': ensemble[:,0].tolist(), 'y': ensemble[:,1].tolist(), 'labels': labels.reshape(-1).tolist() }
 
-  print("evaluating metrics...")
+  # print("evaluating metrics...")
   metrics = getMetricsForAllProjections(X, projection_json, labels, 8)
-  print("evaluating metrics finished")
+  # print("evaluating metrics finished")
 
   data = {'projections': projection_json, 'metrics': metrics  } #{'NP': [], 'T': [], 'NH': []}
 
@@ -182,11 +244,15 @@ def estimateEnsemble():
   cost_fn = myMSELoss
 
   # TODO: return also the filename of the saved model
-  Y_estimate = model.train(X_train, Y_train, cost_fn, 500)
+  Y_estimate = model.train_model(X_train, Y_train, cost_fn, 500)
 
-  Y_estimate_json = { 'x': Y_estimate[:,0].tolist(), 'y': Y_estimate[:,1].tolist(), 'labels': data['Ensemble']['labels'] }
+  data_out = {}
+  data_out['estimate'] = { 'x': Y_estimate[:,0].tolist(), 'y': Y_estimate[:,1].tolist(), 'labels': data['Ensemble']['labels'] }
 
-  return json.dumps(Y_estimate_json) 
+  # TODO: 8 should not be hardcoded
+  data_out['estimate_metrics'] = getMetrics(X_train, Y_estimate, np.array(data['Ensemble']['labels']), 8)
+
+  return json.dumps(data_out) 
 
 if __name__ == '__main__':
   app.run(debug=True)

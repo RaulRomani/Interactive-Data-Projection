@@ -51,27 +51,50 @@ def getProjectedData(idExperiment, datasetName, methods):
   # print(len(projections))
   # print(projections[0].shape)
   return projections
-    
-# def getProjectedData(idExperiment, dataset, methods)
 
-#   #tables: dataset, method, projection
-#   #idDataset = select dataset.idDataset from dataset where idExperiment = 5 and dataset.name = "4 Classes"
-#   #idMethods = select idMethod form method where method.idDataset = idDataset and method.name in (methods)
-#   # projection1 =  select x,y,class from projection where idMethod = idMethods[0]
-#   # projection2 =  select x,y,class from projection where idMethod = idMethods[1]
+def projectData(datasetName, method, sample_size):
 
-#   return (projection1, projection2, projection3)
+  import umap
+  import pandas as pd
+  import matplotlib.pyplot as plt
+  from sklearn import preprocessing
 
-# conn = engine.connect() # .fetchall() .keys()
+  min_max_scaler = preprocessing.MinMaxScaler()
 
-# print( str(["TSNE-Gower"]))
+  relative = "../../../"
+  labels   = pd.read_csv(relative + "datasets/" + datasetName + '/' + datasetName + "_labels.csv"        , sep=",", header=None).values.reshape(-1)
+  X_df     = pd.read_csv(relative + "datasets/" + datasetName + '/' + datasetName + "_prep_encoding2.csv", sep=",", header=None)
 
-# getProjectedData(2, "Synthetic4Classes", ["TSNE-Gower",'UMAP - 1HE'])
+  # print(X_df.describe())
 
-# shepherd = "Martha"
-# age = 34
-# stuff_in_string = "Shepherd %s is %d years old." % (shepherd, age)
-# print(stuff_in_string)
+  X_normalized = min_max_scaler.fit_transform(X_df.values) # min_max
 
-# stuff_in_string = "Shepherd {} is {} years old.".format(shepherd, age)
-# print(stuff_in_string)
+  ####### SAMPLE DATA 
+  # sample_size = 1000
+  sample_ids  = np.random.randint(0, high = X_normalized.shape[0], size=(sample_size,))  #list of indexes
+  rest_ids = np.setdiff1d(np.arange(0, X_normalized.shape[0]), sample_ids)
+  # sample_ids = list(range(sample_size,2*sample_size))
+
+  X_normalized_sample = X_normalized[sample_ids]
+  # X_normalized_sample = X_normalized[rest_ids]
+  # X_normalized = preprocessing.scale(X_df.values)  # mean std
+
+  # X_df_normalized = pd.DataFrame(X_normalized)
+  # print(X_df_normalized.describe())
+
+
+  if method == 'UMAP - 1HE':
+    print("ok")
+    X_embedded = umap.UMAP().fit_transform(X_normalized_sample)
+
+
+
+    # plt.scatter(X_embedded[:,0], X_embedded[:,1], c = labels[sample_ids])
+    # plt.show()
+
+    return X_normalized, labels, X_embedded, sample_ids , rest_ids
+
+
+if __name__ == '__main__':
+  # projectData("Caltech", 'UMAP - 1HE',1000)
+  projectData("Iris", 'UMAP - 1HE', 100)

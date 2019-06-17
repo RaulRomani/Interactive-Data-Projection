@@ -11,7 +11,8 @@ export default class Home extends React.Component {
     render () {
       const { methods, tittle } = this.props
 
-      var x_values = [5,10,15,20,25,30,35,40]
+      //var x_values = [5,10,15,20,25,30,35,40]
+      var x_values = [3,6,9,12,15,18,21,24]
       var color_palette = ['rgba(37, 120, 176,1)', 'rgba(254, 125, 41,1)', 'rgba(53, 157, 59,1)', 'rgba(211, 43, 46,1)', '#9269B8', '#8A574D', '#E178BE', '#969696', '#BBBA3B', '#29BECC', '#F97E74', '#80AFCD', '#FBAE6E', '#B3D879', '#FACBE1']
 
 
@@ -22,7 +23,7 @@ export default class Home extends React.Component {
 
         
       }
-      console.log(scatters_line)
+      /*console.log(scatters_line)*/
 
 
 

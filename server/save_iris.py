@@ -31,23 +31,26 @@ import numpy as np
 # np.savetxt("../../datasets/" + dataset_name + '/' + dataset_name + "_prep_encoding2.csv", df.values, delimiter=",")
 
 
+dataset_name = "Iris"
+df = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '_prep_encoding2.csv', header=None)
+print(df.describe())
 
-dataset_name = "OrthopedicPatients"
-df = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '.csv', header=None)
+# dataset_name = "OrthopedicPatients"
+# df = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '.csv', header=None)
 # labels = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '_labels.csv', header=None).values.reshape((-1))
 
 
-df[6] = pd.Categorical(df[6])
-df[6] = df[6].cat.codes
+# df[6] = pd.Categorical(df[6])
+# df[6] = df[6].cat.codes
 
-# print(df.head)
-# categorical_values = np.array(list(set(df.values[:,6])))
-# print(categorical_values)
+# # print(df.head)
+# # categorical_values = np.array(list(set(df.values[:,6])))
+# # print(categorical_values)
 
-# print(df.shape)
-# print(df.head(2))
-# print(df.values[0,:])
-np.savetxt("../../datasets/" + dataset_name + '/' + dataset_name + "_prep_encoding2.csv", df.values[:,:6], delimiter=",")
-np.savetxt("../../datasets/" + dataset_name + '/' + dataset_name + "_labels.csv", df.values[:,6], delimiter=",")
+# # print(df.shape)
+# # print(df.head(2))
+# # print(df.values[0,:])
+# np.savetxt("../../datasets/" + dataset_name + '/' + dataset_name + "_prep_encoding2.csv", df.values[:,:6], delimiter=",")
+# np.savetxt("../../datasets/" + dataset_name + '/' + dataset_name + "_labels.csv", df.values[:,6], delimiter=",")
 
 

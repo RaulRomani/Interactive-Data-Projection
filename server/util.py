@@ -124,25 +124,18 @@ def NeighborhoodPreservation(X, X_embedded, n_neighbors=5, precomputed=False):
     ind_X          = np.argsort(dist_X         , axis=1)[:, 1:n_neighbors + 1]
     ind_X_embedded = np.argsort(dist_X_embedded, axis=1)[:, 1:n_neighbors + 1] 
 
-    def matchedPoints(kNN1, kNN2):
-        n_matchedPoints = 0
-        for i in xrange(n_neighbors):
-            for j in xrange(n_neighbors):
-                if kNN1[i] == kNN2[j]:
-                    n_matchedPoints += 1 
-                    break
-        return n_matchedPoints
-
     NP = 0.0
+    print(len(np.setdiff1d(ind_X[0], ind_X_embedded[0])) )
+    print(len(np.setdiff1d(ind_X[1], ind_X_embedded[1])) )
+    print(ind_X.shape)
+    print(ind_X_embedded.shape)
+    # could be done in parallel
     for i in xrange(X.shape[0]): # for all the examples
-        NP += matchedPoints(ind_X[i], ind_X_embedded[i])
+        NP += n_neighbors - len(np.setdiff1d(ind_X[i], ind_X_embedded[i])) 
     NP = NP / float(n_neighbors*X.shape[0])
 
     return NP
 
-# local metric
-# A value of 1 represent a perfect projection
-# 1 when the classes are clearly separated
 def NeighborhoodHit(X_embedded, C, n_neighbors=5):
 
     dist_X_embedded = cdist(X_embedded, X_embedded, p=2.)
@@ -152,41 +145,18 @@ def NeighborhoodHit(X_embedded, C, n_neighbors=5):
     m = X_embedded.shape[0]
 
     def ratio(x, kNN): # indices
-        same_class = 0.0
-        for i in xrange(n_neighbors):
-            if int(C[x]) == int(C[kNN[i]]):
-                same_class += 1.0
-        return same_class/float(n_neighbors)
+        # if the class of the KNN belongs to the class of the point at evaluation
+        same_class = len(np.where(C[kNN] == C[x])[0])
+        return same_class
 
     NH = 0.0
     for x in xrange(m): # for all the examples
         NH += ratio(x, ind_X_embedded[x])
-    NH = NH / float(m)
+    NH = NH / (float(m) *float(n_neighbors) )
     return NH
 
 
-# local metric
-# A value of 1 represent a perfect projection
-# measures the trustworthiness of the projection neighborhoods
-def trustworthiness_(ind_X, ind_X_embedded, n_neighbors=5, precomputed=False):
-    """Expresses to what extent the local structure is retained.
-    The trustworthiness is within [0, 1]. It is defined as
-
-    Returns
-    -------
-    trustworthiness : float
-        Trustworthiness of the low-dimensional embedding.
-    """
-    # if precomputed:
-    #     dist_X = X
-    # else:
-    #     dist_X = cdist(X, X, p=2.)
-    # dist_X_embedded = cdist(X_embedded, X_embedded, p=2.)
-    
-    
-    
-    # ind_X          = np.argsort(dist_X         , axis=1)
-    # ind_X_embedded = np.argsort(dist_X_embedded, axis=1)[:, 1:n_neighbors + 1]
+def trustworthiness_(ind_X, ind_X_embedded, n_neighbors=5):
 
     n_samples = ind_X.shape[0]
     
@@ -202,60 +172,37 @@ def trustworthiness_(ind_X, ind_X_embedded, n_neighbors=5, precomputed=False):
     t = 1.0 - t * (2.0 / (n_samples * n_neighbors * (2.0 * n_samples - 3.0 * n_neighbors - 1.0)))
     return t # t: measure of trustworthiness
 
-# local metric
-# A value of 1 represent a perfect projection
-# 1 when there is not missing and false neighbors in the kNNs of the projected points
-def NeighborhoodPreservation_(ind_X, ind_X_embedded, n_neighbors=5, precomputed=False):
 
-    # if precomputed:
-    #     dist_X = X
-    # else:
-    #     dist_X = cdist(X, X, p=2.)
-    # dist_X_embedded = cdist(X_embedded, X_embedded, p=2.)
-    
-    # #select the kNN for each instance
-    # ind_X          = np.argsort(dist_X         , axis=1)[:, 1:n_neighbors + 1]
-    # ind_X_embedded = np.argsort(dist_X_embedded, axis=1)[:, 1:n_neighbors + 1] 
-
-    def matchedPoints(kNN1, kNN2):
-        n_matchedPoints = 0
-        for i in xrange(n_neighbors):
-            for j in xrange(n_neighbors):
-                if kNN1[i] == kNN2[j]:
-                    n_matchedPoints += 1 
-                    break
-        return n_matchedPoints
+def NeighborhoodPreservation_(ind_X, ind_X_embedded, n_neighbors=5):
 
     NP = 0.0
     for i in xrange(ind_X.shape[0]): # for all the examples
-        NP += matchedPoints(ind_X[i], ind_X_embedded[i])
+        NP += n_neighbors - len(np.setdiff1d(ind_X[i], ind_X_embedded[i])) 
     NP = NP / float(n_neighbors*ind_X.shape[0])
-
+    print(NP)
     return NP
 
-# local metric
-# A value of 1 represent a perfect projection
-# 1 when the classes are clearly separated
 def NeighborhoodHit_(ind_X_embedded, C, n_neighbors=5):
 
+    # dist_X_embedded = cdist(X_embedded, X_embedded, p=2.)
+    
     # #select the kNN for each instance
     # ind_X_embedded = np.argsort(dist_X_embedded, axis=1)[:, 1:n_neighbors + 1] 
 
     m = ind_X_embedded.shape[0]
 
+
     def ratio(x, kNN): # indices
-        same_class = 0.0
-        for i in xrange(n_neighbors):
-            if int(C[x]) == int(C[kNN[i]]):
-                same_class += 1.0
-        return same_class/float(n_neighbors)
+      # if the class of the KNN belongs to the class of the point at evaluation
+      same_class = len(np.where(C[kNN] == C[x])[0])
+      return same_class
 
     NH = 0.0
     for x in xrange(m): # for all the examples
         NH += ratio(x, ind_X_embedded[x])
-    NH = NH / float(m)
+    NH = NH / float(m*n_neighbors)
+    # print(NH)
     return NH
-
 
 # evaluate metrics for many projections
 def getMetricsForAllProjections(X, projections, labels, n_executions):
@@ -266,36 +213,42 @@ def getMetricsForAllProjections(X, projections, labels, n_executions):
     LAMP_projected = np.hstack( (np.array(projections['LAMP']['x']).reshape((-1,1)), np.array(projections['LAMP']['y']).reshape((-1,1))) ) 
     trustworthiness, NeighborhoodPreservation, NeighborhoodHit = evaluateMetrics(X, LAMP_projected, labels, n_executions)
 
-    metrics['T'].append({'methodName': 'LAMP', 'values': trustworthiness})
+    # metrics['T'].append({'methodName': 'LAMP', 'values': trustworthiness})
     metrics['NP'].append({'methodName': 'LAMP', 'values': NeighborhoodPreservation})
     metrics['NH'].append({'methodName': 'LAMP', 'values': NeighborhoodHit})
 
   if 'LSP' in projections:
     LSP_projected = np.hstack( (np.array(projections['LSP']['x']).reshape((-1,1)), np.array(projections['LSP']['y']).reshape((-1,1))) ) 
     trustworthiness, NeighborhoodPreservation, NeighborhoodHit = evaluateMetrics(X, LSP_projected, labels, n_executions)
-    metrics['T'].append({'methodName': 'LSP', 'values': trustworthiness})
+    # metrics['T'].append({'methodName': 'LSP', 'values': trustworthiness})
     metrics['NP'].append({'methodName': 'LSP', 'values': NeighborhoodPreservation})
     metrics['NH'].append({'methodName': 'LSP', 'values': NeighborhoodHit})
 
   if 'PLMP' in projections:
     PLMP_projected = np.hstack( (np.array(projections['PLMP']['x']).reshape((-1,1)), np.array(projections['PLMP']['y']).reshape((-1,1))) ) 
     trustworthiness, NeighborhoodPreservation, NeighborhoodHit = evaluateMetrics(X, PLMP_projected, labels, n_executions)
-    metrics['T'].append({'methodName': 'PLMP', 'values': trustworthiness})
+    # metrics['T'].append({'methodName': 'PLMP', 'values': trustworthiness})
     metrics['NP'].append({'methodName': 'PLMP', 'values': NeighborhoodPreservation})
     metrics['NH'].append({'methodName': 'PLMP', 'values': NeighborhoodHit})
 
   if 'Ensemble' in projections:
     Ensemble_projected = np.hstack( (np.array(projections['Ensemble']['x']).reshape((-1,1)), np.array(projections['Ensemble']['y']).reshape((-1,1))) ) 
     trustworthiness, NeighborhoodPreservation, NeighborhoodHit = evaluateMetrics(X, Ensemble_projected, labels, n_executions)
-    metrics['T'].append({'methodName': 'Ensemble', 'values': trustworthiness})
+    # metrics['T'].append({'methodName': 'Ensemble', 'values': trustworthiness})
     metrics['NP'].append({'methodName': 'Ensemble', 'values': NeighborhoodPreservation})
     metrics['NH'].append({'methodName': 'Ensemble', 'values': NeighborhoodHit})
 
   return metrics
 
+def getMetrics(X, X_projection, labels, n_executions):
 
+  metrics = {'NP': {}, 'T': {}, 'NH': {}}
+  trustworthiness, NeighborhoodPreservation, NeighborhoodHit = evaluateMetrics(X, X_projection, labels, n_executions)
+  # metrics['T'].append({'methodName': 'Ensemble', 'values': trustworthiness})
+  metrics['NP'] = {'values': NeighborhoodPreservation}
+  metrics['NH'] = {'values': NeighborhoodHit}
 
-
+  return metrics
 
 # evaluate metrics per projection/method
 def evaluateMetrics(X, X_embedded, labels, n_executions):
@@ -305,26 +258,31 @@ def evaluateMetrics(X, X_embedded, labels, n_executions):
     dist_X_embedded = cdist(X_embedded, X_embedded, p=2.)
 
     list_ind_X_embedded = []
-    for n in xrange(1,n_executions+1):
-        n_neighbors    = int(m*n*5/100.0)
+    increment = 3
+    for i in xrange(1,n_executions+1):
+        n_neighbors    = int(m*i*increment/100.0)
         ind_X_embedded = np.argsort(dist_X_embedded, axis=1)[:, 1:n_neighbors + 1]
         list_ind_X_embedded.append(ind_X_embedded)
 
     trustworthiness          = []
     NeighborhoodPreservation = []
     NeighborhoodHit          = []
-    for n in xrange(1,n_executions+1):
-        trustworthiness.append(trustworthiness_(ind_X, list_ind_X_embedded[n-1], n_neighbors= int(m*n*5/100.0), precomputed=False))
-        NeighborhoodPreservation.append(NeighborhoodPreservation_(ind_X, list_ind_X_embedded[n-1], n_neighbors= int(m*n*5/100.0), precomputed=False))
-        NeighborhoodHit.append(NeighborhoodHit_(list_ind_X_embedded[n-1], labels, n_neighbors= int(m*n*5/100.0)))
+    for i in xrange(1,n_executions+1):
+        n_neighbors = int(m*i*increment/100.0)
+        # trustworthiness.append(trustworthiness_(ind_X, list_ind_X_embedded[i-1], n_neighbors = n_neighbors))
+        NeighborhoodPreservation.append(NeighborhoodPreservation_(ind_X[:, 1:n_neighbors + 1], list_ind_X_embedded[i-1], n_neighbors = n_neighbors))
+        NeighborhoodHit.append(NeighborhoodHit_(list_ind_X_embedded[i-1], labels, n_neighbors = n_neighbors ))
 
     return trustworthiness, NeighborhoodPreservation, NeighborhoodHit
 
 
 
-def main():
+
+def testMetricsElapsedTime():
   #TODO: Make stress test of NH with fake data or real?
   import pandas as pd
+  # dataset_name = "Caltech"
+  # dataset_name = "Iris"
   dataset_name = "Synthetic4Classes"
   X           = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '_prep_encoding2.csv', header=None).values
   labels      = pd.read_csv("../../datasets/" + dataset_name + '/'+ dataset_name + '_labels.csv', header=None).values.reshape((-1))
@@ -334,10 +292,38 @@ def main():
   print(labels.shape)
   print(X_projected.shape)
 
-  print(NeighborhoodHit(X_projected, labels, int(X.shape[0]*0.5)))
-  # print(NeighborhoodPreservation(X, X_projected, int(X.shape[0]*0.5)))
-  print(trustworthiness(X, X_projected, int(X.shape[0]*0.5)))
+  projections = {'LSP' : {'x' : X_projected[:,0].tolist(),
+                          'y' : X_projected[:,1].tolist()
+                         } 
+                }
 
-    
+  getMetricsForAllProjections(X= X, projections = projections, labels= labels, n_executions= 4)
+
+  import time
+  # start = time.time()
+  # print(NeighborhoodHit(X_projected, labels, int(X.shape[0]*0.50)))
+  # end   = time.time()
+  # print("elapsed time:", end - start)
+
+  # start = time.time()
+  # print(trustworthiness(X, X_projected, int(X.shape[0]*0.24)))
+  # end   = time.time()
+  # print("elapsed time:", end - start)
+
+  print("")
+  # start = time.time()
+
+  # print(NeighborhoodHit(X_projected, labels, int(X.shape[0]*0.03)))
+  # print(NeighborhoodHit(X_projected, labels, int(X.shape[0]*0.06)))
+  # print(NeighborhoodHit(X_projected, labels, int(X.shape[0]*0.09)))
+  # print(NeighborhoodHit(X_projected, labels, int(X.shape[0]*0.12)))
+
+  print(NeighborhoodPreservation(X, X_projected, int(X.shape[0]*0.03)))
+  print(NeighborhoodPreservation(X, X_projected, int(X.shape[0]*0.06)))
+  print(NeighborhoodPreservation(X, X_projected, int(X.shape[0]*0.09)))
+  print(NeighborhoodPreservation(X, X_projected, int(X.shape[0]*0.12)))
+  # end = time.time()
+  # print("elapsed time:", end - start)
+
 if __name__ == '__main__':
-    main()
+  testMetricsElapsedTime()

@@ -10,10 +10,17 @@ const headers = {
   'Authorization': token
 }
 
-/*export const getControlPoints = () =>
-  fetch(`${api}/controlPoints`, { headers })
-    .then(res => res.json())
-    .then(data => data)*/
+
+export const post_request = (route, body) =>
+  fetch(`${api}${route}`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Authorization': token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  }).then(res => res.json())
 
 export const getControlPoints = (body) =>
   fetch(`${api}/controlPoints`, {
@@ -28,6 +35,17 @@ export const getControlPoints = (body) =>
 
 export const projectUsingEnsemble = (body) =>
   fetch(`${api}/projectUsingEnsemble`, {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  }).then(res => res.json())
+
+
+export const changeWeightsEnsemble = (body) =>
+  fetch(`${api}/changeWeightsEnsemble`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
